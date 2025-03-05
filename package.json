@@ -1,0 +1,67 @@
+{
+  "name": "neon-vscode-extension",
+  "displayName": "Neon VSCode Extension",
+  "description": "VSCode extension for Neon",
+  "version": "1.0.0",
+  "publisher": "neon",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:neon-welcome",
+    "onCommand:neon-vscode-extension.signIn"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "neon-vscode-extension.signIn",
+        "title": "Sign in with Neon"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "neon-sidebar",
+          "title": "Neon",
+          "icon": "resources/neon-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "neon-sidebar": [
+        {
+          "id": "neon-welcome",
+          "name": "Neon"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && node copy-assets.js",
+    "watch": "node watch.js",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.4.5",
+    "@types/open": "^6.2.1",
+    "@types/vscode": "^1.60.0",
+    "@vscode/vsce": "^2.19.0",
+    "typescript": "^5.1.6",
+    "vscode": "^1.1.37"
+  },
+  "dependencies": {
+    "open": "^9.1.0",
+    "openid-client": "^5.6.1"
+  }
+}
