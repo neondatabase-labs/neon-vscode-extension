@@ -38,6 +38,7 @@ exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const authManager_1 = require("./auth/authManager");
 const welcomeView_1 = require("./views/welcomeView");
+const neonExplorer_1 = require("./views/neonExplorer");
 function activate(context) {
     console.log('Neon VSCode Extension is now active!');
     // Initialize the auth manager
@@ -49,16 +50,36 @@ function activate(context) {
             retainContextWhenHidden: true
         }
     }));
+    // Register the Neon Explorer tree view
+    const neonExplorerProvider = new neonExplorer_1.NeonExplorerProvider(context);
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('neonExplorer', neonExplorerProvider));
     // Register the sign in command
     const signInCommand = vscode.commands.registerCommand('neon-vscode-extension.signIn', async () => {
         try {
             await authManager.signIn();
+            // Refresh the tree view after signing in
+            neonExplorerProvider.refresh();
         }
         catch (error) {
             console.error('Sign in error:', error);
         }
     });
-    context.subscriptions.push(signInCommand);
+    // Register the sign out command
+    const signOutCommand = vscode.commands.registerCommand('neon-vscode-extension.signOut', async () => {
+        try {
+            await authManager.signOut();
+            // Refresh the tree view after signing out
+            neonExplorerProvider.refresh();
+        }
+        catch (error) {
+            console.error('Sign out error:', error);
+        }
+    });
+    // Register refresh command
+    const refreshCommand = vscode.commands.registerCommand('neon-vscode-extension.refreshTree', () => {
+        neonExplorerProvider.refresh();
+    });
+    context.subscriptions.push(signInCommand, signOutCommand, refreshCommand);
     // Show the welcome view when the extension is activated
     vscode.commands.executeCommand('neon-welcome.focus');
 }

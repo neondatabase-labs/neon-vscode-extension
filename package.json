@@ -19,23 +19,41 @@
     "commands": [
       {
         "command": "neon-vscode-extension.signIn",
-        "title": "Sign in with Neon"
+        "title": "Sign in to Neon"
+      },
+      {
+        "command": "neon-vscode-extension.signOut",
+        "title": "Sign out from Neon"
+      },
+      {
+        "command": "neon-vscode-extension.refreshTree",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "neon-sidebar",
+          "id": "neon",
           "title": "Neon",
-          "icon": "resources/neon-icon.svg"
+          "icon": "media/neon-icon.svg"
         }
       ]
     },
     "views": {
-      "neon-sidebar": [
+      "neon": [
         {
-          "id": "neon-welcome",
+          "id": "neonExplorer",
           "name": "Neon"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "neon-vscode-extension.refreshTree",
+          "when": "view == neonExplorer",
+          "group": "navigation"
         }
       ]
     }
@@ -61,6 +79,7 @@
     "vscode": "^1.1.37"
   },
   "dependencies": {
+    "@neondatabase/api-client": "^1.13.0",
     "open": "^9.1.0",
     "openid-client": "^5.6.1"
   }
