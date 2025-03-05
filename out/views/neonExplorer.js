@@ -63,41 +63,55 @@ class NeonExplorerProvider {
         }
         // If this is the root level and we're authenticated
         if (!element) {
-            return [
-                new NeonTreeItem('Projects', 'projects', vscode.TreeItemCollapsibleState.Collapsed),
-                new NeonTreeItem('Sign Out', 'signout', vscode.TreeItemCollapsibleState.None)
-            ];
+            const selectedProjectId = this.context.globalState.get('neon.selectedProjectId');
+            const selectedProjectName = this.context.globalState.get('neon.selectedProjectName');
+            const items = [];
+            // If a project is selected, show its branches
+            if (selectedProjectId && selectedProjectName) {
+                const projectItem = new NeonTreeItem(`Current Project: ${selectedProjectName}`, 'current-project', vscode.TreeItemCollapsibleState.Collapsed);
+                projectItem.tooltip = `Project ID: ${selectedProjectId}\nName: ${selectedProjectName}`;
+                items.push(projectItem);
+            }
+            items.push(new NeonTreeItem('Sign Out', 'signout', vscode.TreeItemCollapsibleState.None));
+            return items;
         }
         // Handle child items based on parent
-        if (element.id === 'projects') {
+        if (element.id === 'current-project') {
             try {
+                // Get the selected project ID
+                const projectId = this.context.globalState.get('neon.selectedProjectId');
+                if (!projectId) {
+                    return [new NeonTreeItem('No project selected', 'no-project-selected', vscode.TreeItemCollapsibleState.None)];
+                }
                 // Ensure token is refreshed if needed
                 await authManager.refreshTokenIfNeeded();
                 const tokenSet = authManager.tokenSet;
                 if (!tokenSet) {
                     throw new Error('No valid token available');
                 }
-                // Create API client and fetch projects
+                // Create API client and fetch branches for the selected project
                 const neonClient = (0, neonClient_1.createNeonApiClient)(tokenSet);
-                const response = await neonClient.listProjects({});
-                // Extract projects from the response data
-                const projects = response.data.projects;
-                if (!projects || projects.length === 0) {
-                    return [new NeonTreeItem('No projects found', 'no-projects', vscode.TreeItemCollapsibleState.None)];
+                const response = await neonClient.listProjectBranches({
+                    projectId: projectId,
+                });
+                // Extract branches from the response data
+                const branches = response.data.branches;
+                if (!branches || branches.length === 0) {
+                    return [new NeonTreeItem('No branches found', 'no-branches', vscode.TreeItemCollapsibleState.None)];
                 }
-                // Map projects to tree items
-                return projects.map((project) => {
-                    const treeItem = new NeonTreeItem(project.name, `project-${project.id}`, vscode.TreeItemCollapsibleState.None);
-                    // Store project data in the context value for later use
-                    treeItem.tooltip = `Project ID: ${project.id}\nRegion: ${project.region_id}\nCreated: ${new Date(project.created_at).toLocaleDateString()}`;
-                    treeItem.contextValue = 'project';
+                // Map branches to tree items
+                return branches.map((branch) => {
+                    const treeItem = new NeonTreeItem(branch.name, `branch-${branch.id}`, vscode.TreeItemCollapsibleState.None);
+                    // Store branch data in the context value for later use
+                    treeItem.tooltip = `Branch ID: ${branch.id}\nCreated: ${new Date(branch.created_at).toLocaleDateString()}`;
+                    treeItem.contextValue = 'branch';
                     return treeItem;
                 });
             }
             catch (error) {
-                console.error('Error fetching projects:', error);
-                vscode.window.showErrorMessage(`Failed to fetch Neon projects: ${error instanceof Error ? error.message : String(error)}`);
-                return [new NeonTreeItem('Error fetching projects', 'error', vscode.TreeItemCollapsibleState.None)];
+                console.error('Error fetching branches:', error);
+                vscode.window.showErrorMessage(`Failed to fetch Neon branches: ${error instanceof Error ? error.message : String(error)}`);
+                return [new NeonTreeItem('Error fetching branches', 'error', vscode.TreeItemCollapsibleState.None)];
             }
         }
         return [];
@@ -115,13 +129,13 @@ class NeonTreeItem extends vscode.TreeItem {
         // Set command for clickable items
         if (id === 'signin') {
             this.command = {
-                command: 'neon.signIn',
+                command: 'neon-vscode-extension.signIn',
                 title: 'Sign In'
             };
         }
         else if (id === 'signout') {
             this.command = {
-                command: 'neon.signOut',
+                command: 'neon-vscode-extension.signOut',
                 title: 'Sign Out'
             };
         }
