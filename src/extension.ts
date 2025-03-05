@@ -3,7 +3,7 @@ import { AuthManager } from './auth/authManager';
 import { WelcomeViewProvider } from './views/welcomeView';
 import { NeonExplorerProvider } from './views/neonExplorer';
 import { createNeonApiClient } from './api/neonClient';
-import { ProjectListItem } from '@neondatabase/api-client';
+import { ProjectListItem, EndpointType } from '@neondatabase/api-client';
 
 // Status bar item for showing the current project
 let projectStatusBarItem: vscode.StatusBarItem;
@@ -153,7 +153,82 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage(`Switched to project: ${projectName}`);
   });
 
-  context.subscriptions.push(signInCommand, signOutCommand, refreshCommand, switchProjectCommand, selectProjectCommand);
+  // Register create branch command
+  const createBranchCommand = vscode.commands.registerCommand('neon-vscode-extension.createBranch', async () => {
+    try {
+      const isAuthenticated = await authManager.isAuthenticated;
+      if (!isAuthenticated) {
+        vscode.window.showInformationMessage('Please sign in to Neon first');
+        return;
+      }
+
+      // Get the selected project ID
+      const projectId = context.globalState.get<string>('neon.selectedProjectId');
+      if (!projectId) {
+        vscode.window.showInformationMessage('No project selected');
+        return;
+      }
+
+      // Prompt user for branch name
+      const branchName = await vscode.window.showInputBox({
+        placeHolder: 'Enter branch name',
+        prompt: 'Enter a name for the new branch',
+        validateInput: (value) => {
+          if (!value || value.trim().length === 0) {
+            return 'Branch name cannot be empty';
+          }
+          return null;
+        }
+      });
+
+      if (!branchName) {
+        // User cancelled the input
+        return;
+      }
+
+      // Ensure token is refreshed if needed
+      await authManager.refreshTokenIfNeeded();
+      const tokenSet = authManager.tokenSet;
+      
+      if (!tokenSet) {
+        throw new Error('No valid token available');
+      }
+      
+      // Create API client and create branch
+      const neonClient = createNeonApiClient(tokenSet);
+      
+      // Show progress indicator
+      await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: `Creating branch '${branchName}'...`,
+        cancellable: false
+      }, async () => {
+        const response = await neonClient.createProjectBranch(projectId, {
+          branch: {
+            name: branchName,
+          },
+          endpoints: [
+            {
+              type: EndpointType.ReadWrite,
+              autoscaling_limit_min_cu: 0.25,
+              autoscaling_limit_max_cu: 0.25,
+              provisioner: 'k8s-neonvm',
+            },
+          ],
+        });
+
+        // Refresh the tree view to show the new branch
+        neonExplorerProvider.refresh();
+        
+        vscode.window.showInformationMessage(`Branch '${branchName}' created successfully`);
+      });
+    } catch (error) {
+      console.error('Error creating branch:', error);
+      vscode.window.showErrorMessage(`Failed to create branch: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  });
+
+  context.subscriptions.push(signInCommand, signOutCommand, refreshCommand, switchProjectCommand, selectProjectCommand, createBranchCommand);
   
   // Show the welcome view when the extension is activated
   vscode.commands.executeCommand('neon-welcome.focus');

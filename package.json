@@ -37,6 +37,11 @@
       {
         "command": "neon-vscode-extension.selectProject",
         "title": "Select Project"
+      },
+      {
+        "command": "neon-vscode-extension.createBranch",
+        "title": "Create Branch",
+        "icon": "$(add)"
       }
     ],
     "viewsContainers": {
@@ -74,6 +79,11 @@
           "command": "neon-vscode-extension.selectProject",
           "when": "view == neonExplorer && viewItem == project",
           "group": "inline"
+        },
+        {
+          "command": "neon-vscode-extension.createBranch",
+          "when": "view == neonExplorer && viewItem == current-project",
+          "group": "inline"
         }
       ],
       "commandPalette": [
@@ -84,6 +94,10 @@
         {
           "command": "neon-vscode-extension.selectProject",
           "when": "false"
+        },
+        {
+          "command": "neon-vscode-extension.createBranch",
+          "when": "neon-vscode-extension.isAuthenticated"
         }
       ]
     }

@@ -70,6 +70,7 @@ class NeonExplorerProvider {
             if (selectedProjectId && selectedProjectName) {
                 const projectItem = new NeonTreeItem(`Current Project: ${selectedProjectName}`, 'current-project', vscode.TreeItemCollapsibleState.Collapsed);
                 projectItem.tooltip = `Project ID: ${selectedProjectId}\nName: ${selectedProjectName}`;
+                projectItem.contextValue = 'current-project';
                 items.push(projectItem);
             }
             items.push(new NeonTreeItem('Sign Out', 'signout', vscode.TreeItemCollapsibleState.None));

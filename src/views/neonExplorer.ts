@@ -55,6 +55,7 @@ export class NeonExplorerProvider implements vscode.TreeDataProvider<NeonTreeIte
           vscode.TreeItemCollapsibleState.Collapsed
         );
         projectItem.tooltip = `Project ID: ${selectedProjectId}\nName: ${selectedProjectName}`;
+        projectItem.contextValue = 'current-project';
         items.push(projectItem);
       }
       
