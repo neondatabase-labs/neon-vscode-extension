@@ -35,7 +35,7 @@ export class AuthManager {
     try {
       const authProps: AuthProps = {
         oauthHost: 'https://oauth2.neon.tech',
-        clientId: 'neonctl',
+        clientId: 'neonvscode',
       };
 
       const tokenSet = await auth(authProps);
